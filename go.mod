@@ -1,6 +1,6 @@
 module github.com/ependi-buzz/sql_exporter
 
-go 1.23.4
+go 1.23
 
 require (
 	github.com/ClickHouse/clickhouse-go v1.5.4
