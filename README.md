@@ -24,7 +24,7 @@ Get Prometheus SQL Exporter, either as a [packaged release](https://github.com/e
 build it yourself:
 
 ```
-$ go install github.com/ependi-buzz/sql_exporter/cmd/sql_exporter
+$ go install github.com/ependi-buzz/sql_exporter/cmd/sql_exporter@latest
 ```
 
 then run it from the command line:
