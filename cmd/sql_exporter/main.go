@@ -21,10 +21,6 @@ var (
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file name.")
 )
 
-func init() {
-	//prometheus.MustRegister(version.NewCollector("sql_exporter"))
-}
-
 func main() {
 	if os.Getenv("DEBUG") != "" {
 		runtime.SetBlockProfileRate(1)
