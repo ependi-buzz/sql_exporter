@@ -7,9 +7,8 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/free/sql_exporter"
+	"github.com/ependi-buzz/sql_exporter"
 	log "github.com/golang/glog"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	_ "net/http/pprof"
@@ -23,7 +22,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(version.NewCollector("sql_exporter"))
+	//prometheus.MustRegister(version.NewCollector("sql_exporter"))
 }
 
 func main() {
