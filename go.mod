@@ -7,11 +7,11 @@ require (
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/golang/glog v1.2.4
-	github.com/golang/protobuf v1.5.4
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.62.0
+	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -27,5 +27,4 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
-	google.golang.org/protobuf v1.36.5 // indirect
 )

@@ -3,6 +3,7 @@ module github.com/ependi-buzz/sql_exporter/cmd/sql_exporter
 go 1.23.4
 
 require (
+	github.com/ependi-buzz/sql_exporter v0.0.0-20250207064405-94ead1d049f4
 	github.com/golang/glog v1.2.4
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.62.0
@@ -15,13 +16,11 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/golz4 v0.0.0-20240916140612-caecf3c00c06 // indirect
 	github.com/denisenkom/go-mssqldb v0.12.3 // indirect
-	github.com/ependi-buzz/sql_exporter v0.0.0-20250207064405-94ead1d049f4 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
