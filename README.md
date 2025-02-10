@@ -1,5 +1,3 @@
-# Prometheus SQL Exporter [![Build Status](https://travis-ci.org/free/sql_exporter.svg)](https://travis-ci.org/free/sql_exporter) [![Go Report Card](https://goreportcard.com/badge/github.com/ependi-buzz/sql_exporter)](https://goreportcard.com/report/github.com/ependi-buzz/sql_exporter) [![GoDoc](https://godoc.org/github.com/ependi-buzz/sql_exporter?status.svg)](https://godoc.org/github.com/ependi-buzz/sql_exporter) [![Docker Pulls](https://img.shields.io/docker/pulls/githubfree/sql_exporter.svg?maxAge=604800)](https://hub.docker.com/r/githubfree/sql_exporter)
-
 Database agnostic SQL exporter for [Prometheus](https://prometheus.io).
 
 ## Overview
