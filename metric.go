@@ -27,10 +27,11 @@ type MetricDesc interface {
 
 // MetricFamily implements MetricDesc for SQL metrics, with logic for populating its labels and values from sql.Rows.
 type MetricFamily struct {
-	config      *config.MetricConfig
-	constLabels []*dto.LabelPair
-	labels      []string
-	logContext  string
+	config       *config.MetricConfig
+	counterValue float64
+	constLabels  []*dto.LabelPair
+	labels       []string
+	logContext   string
 }
 
 // NewMetricFamily creates a new MetricFamily with the given metric config and const labels (e.g. job and instance).
@@ -70,7 +71,7 @@ func NewMetricFamily(logContext string, mc *config.MetricConfig, constLabels []*
 }
 
 // Collect is the equivalent of prometheus.Collector.Collect() but takes a Query output map to populate values from.
-func (mf MetricFamily) Collect(row map[string]interface{}, ch chan<- Metric) {
+func (mf *MetricFamily) Collect(row map[string]interface{}, ch chan<- Metric) {
 	labelValues := make([]string, len(mf.labels))
 	for i, label := range mf.config.KeyLabels {
 		labelValues[i] = row[label].(string)
@@ -80,37 +81,41 @@ func (mf MetricFamily) Collect(row map[string]interface{}, ch chan<- Metric) {
 			labelValues[len(labelValues)-1] = v
 		}
 		value := row[v].(float64)
-		ch <- NewMetric(&mf, value, labelValues...)
+		if mf.config.TypeString == "counter" {
+			mf.counterValue += value
+			value = mf.counterValue
+		}
+		ch <- NewMetric(mf, value, labelValues...)
 	}
 }
 
 // Name implements MetricDesc.
-func (mf MetricFamily) Name() string {
+func (mf *MetricFamily) Name() string {
 	return mf.config.Name
 }
 
 // Help implements MetricDesc.
-func (mf MetricFamily) Help() string {
+func (mf *MetricFamily) Help() string {
 	return mf.config.Help
 }
 
 // ValueType implements MetricDesc.
-func (mf MetricFamily) ValueType() prometheus.ValueType {
+func (mf *MetricFamily) ValueType() prometheus.ValueType {
 	return mf.config.ValueType()
 }
 
 // ConstLabels implements MetricDesc.
-func (mf MetricFamily) ConstLabels() []*dto.LabelPair {
+func (mf *MetricFamily) ConstLabels() []*dto.LabelPair {
 	return mf.constLabels
 }
 
 // Labels implements MetricDesc.
-func (mf MetricFamily) Labels() []string {
+func (mf *MetricFamily) Labels() []string {
 	return mf.labels
 }
 
 // LogContext implements MetricDesc.
-func (mf MetricFamily) LogContext() string {
+func (mf *MetricFamily) LogContext() string {
 	return mf.logContext
 }
 

@@ -22,11 +22,14 @@ type Exporter interface {
 	WithContext(context.Context) Exporter
 	// Config returns the Exporter's underlying Config object.
 	Config() *config.Config
+
+	ReloadConfig(ctx context.Context) error
 }
 
 type exporter struct {
-	config  *config.Config
-	targets []Target
+	configFile string
+	config     *config.Config
+	targets    []Target
 
 	ctx context.Context
 }
@@ -41,7 +44,7 @@ func NewExporter(configFile string) (Exporter, error) {
 	// Override the DSN if requested (and in single target mode).
 	if *dsnOverride != "" {
 		if len(c.Jobs) > 0 {
-			return nil, fmt.Errorf("The config.data-source-name flag (value %q) only applies in single target mode", *dsnOverride)
+			return nil, fmt.Errorf("the config.data-source-name flag (value %q) only applies in single target mode", *dsnOverride)
 		} else {
 			c.Target.DSN = config.Secret(*dsnOverride)
 		}
@@ -66,10 +69,21 @@ func NewExporter(configFile string) (Exporter, error) {
 	}
 
 	return &exporter{
-		config:  c,
-		targets: targets,
-		ctx:     context.Background(),
+		configFile: configFile,
+		config:     c,
+		targets:    targets,
+		ctx:        context.Background(),
 	}, nil
+}
+
+// ReloadConfig hot load config
+func (e *exporter) ReloadConfig(ctx context.Context) error {
+	c, err := config.Load(e.configFile)
+	if err != nil {
+		return err
+	}
+	t := e.targets[0]
+	return t.ReloadConfig(ctx, c.Collectors, nil)
 }
 
 func (e *exporter) WithContext(ctx context.Context) Exporter {

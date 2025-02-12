@@ -31,6 +31,8 @@ const (
 type Target interface {
 	// Collect is the equivalent of prometheus.Collector.Collect(), but takes a context to run in.
 	Collect(ctx context.Context, ch chan<- Metric)
+
+	ReloadConfig(ctx context.Context, ccs []*config.CollectorConfig, constLabels prometheus.Labels) error
 }
 
 // target implements Target. It wraps a sql.DB, which is initially nil but never changes once instantianted.
@@ -45,6 +47,8 @@ type target struct {
 	logContext         string
 
 	conn *sql.DB
+
+	mutex sync.Mutex
 }
 
 // NewTarget returns a new Target with the given instance name, data source name, collectors and constant labels.
@@ -91,8 +95,48 @@ func NewTarget(
 	return &t, nil
 }
 
+// ReloadConfig hot reload
+func (t *target) ReloadConfig(ctx context.Context, ccs []*config.CollectorConfig, constLabels prometheus.Labels) (err error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	collectors := make([]Collector, 0, len(ccs))
+
+	constLabelPairs := make([]*dto.LabelPair, 0, len(constLabels))
+	for n, v := range constLabels {
+		constLabelPairs = append(constLabelPairs, &dto.LabelPair{
+			Name:  proto.String(n),
+			Value: proto.String(v),
+		})
+	}
+	sort.Sort(labelPairSorter(constLabelPairs))
+
+CollectorConfig:
+	for _, cc := range ccs {
+		for _, c := range t.collectors {
+			if c.Name() == cc.Name {
+				err = c.ReloadConfig(ctx, cc, constLabelPairs)
+				if err != nil {
+					return err
+				}
+				collectors = append(collectors, c)
+				continue CollectorConfig
+			}
+		}
+		c, err := NewCollector("", cc, constLabelPairs)
+		if err != nil {
+			return err
+		}
+		collectors = append(collectors, c)
+	}
+	t.collectors = collectors
+	return nil
+}
+
 // Collect implements Target.
 func (t *target) Collect(ctx context.Context, ch chan<- Metric) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
 	var (
 		scrapeStart = time.Now()
 		targetUp    = true
