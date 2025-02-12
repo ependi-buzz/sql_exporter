@@ -16,8 +16,14 @@ import (
 // Collector is a self-contained group of SQL queries and metric families to collect from a specific database. It is
 // conceptually similar to a prometheus.Collector.
 type Collector interface {
+	// Name collector name
+	Name() string
+
 	// Collect is the equivalent of prometheus.Collector.Collect() but takes a context to run in and a database to run on.
 	Collect(context.Context, *sql.DB, chan<- Metric)
+
+	// ReloadConfig hot reload collector config
+	ReloadConfig(ctx context.Context, cConfig *config.CollectorConfig, constLabels []*dto.LabelPair) error
 }
 
 // collector implements Collector. It wraps a collection of queries, metrics and the database to collect them from.
@@ -70,6 +76,43 @@ func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*
 	return &c, nil
 }
 
+func (c *collector) Name() string {
+	return c.config.Name
+}
+
+// ReloadConfig implements Collector.
+func (c *collector) ReloadConfig(ctx context.Context, cc *config.CollectorConfig, constLabels []*dto.LabelPair) (err error) {
+	logContext := fmt.Sprintf("%s, collector=%q", "", cc.Name)
+	queryMFs := make(map[*config.QueryConfig][]*MetricFamily, len(cc.Metrics))
+	for _, mc := range cc.Metrics {
+		mf := copyMetricFamily(mc.Name, c.queries)
+		if mf == nil {
+			mf, err = NewMetricFamily(logContext, mc, constLabels)
+			if err != nil {
+				return err
+			}
+		}
+		mfs, found := queryMFs[mc.Query()]
+		if !found {
+			mfs = make([]*MetricFamily, 0, 2)
+		}
+		queryMFs[mc.Query()] = append(mfs, mf)
+	}
+
+	// Instantiate queries.
+	queries := make([]*Query, 0, len(cc.Metrics))
+	for qc, mfs := range queryMFs {
+		q, err := NewQuery(logContext, qc, mfs...)
+		if err != nil {
+			return err
+		}
+		queries = append(queries, q)
+	}
+	c.config = cc
+	c.queries = queries
+	return nil
+}
+
 // Collect implements Collector.
 func (c *collector) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 	var wg sync.WaitGroup
@@ -82,6 +125,23 @@ func (c *collector) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric)
 	}
 	// Only return once all queries have been processed
 	wg.Wait()
+}
+
+func copyMetricFamily(mcName string, queries []*Query) *MetricFamily {
+	for _, q := range queries {
+		for _, mf := range q.metricFamilies {
+			if mf.Name() == mcName {
+				return &MetricFamily{
+					config:       mf.config,
+					counterValue: mf.counterValue,
+					constLabels:  mf.constLabels,
+					labels:       mf.labels,
+					logContext:   mf.logContext,
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // newCachingCollector returns a new Collector wrapping the provided raw Collector.
@@ -106,6 +166,16 @@ type cachingCollector struct {
 	cacheSem chan time.Time
 	// Metrics saved from the last Collect() call.
 	cache []Metric
+}
+
+func (cc *cachingCollector) Name() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cc *cachingCollector) ReloadConfig(ctx context.Context, config *config.CollectorConfig, constLabels []*dto.LabelPair) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 // Collect implements Collector.

@@ -1,6 +1,6 @@
 module github.com/ependi-buzz/sql_exporter
 
-go 1.21
+go 1.20
 
 require (
 	github.com/ClickHouse/clickhouse-go v1.5.4
@@ -10,7 +10,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1
-	github.com/prometheus/common v0.62.0
+	github.com/prometheus/common v0.59.1
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v2 v2.4.0
 )

@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 
 	"github.com/ependi-buzz/sql_exporter"
 	log "github.com/golang/glog"
@@ -60,7 +63,27 @@ func main() {
 	http.Handle("/sql_exporter_metrics", promhttp.Handler())
 
 	log.Infof("Listening on %s", *listenAddress)
-	log.Fatal(http.ListenAndServe(*listenAddress, nil))
+	go func() {
+		log.Fatal(http.ListenAndServe(*listenAddress, nil))
+	}()
+
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGUSR1, syscall.SIGINT, syscall.SIGTERM)
+	for {
+		select {
+		case sig := <-ch:
+			if sig == syscall.SIGUSR1 {
+				err := exporter.ReloadConfig(context.Background())
+				if err != nil {
+					log.Info("Error reloading config: ", err)
+				}
+			} else if sig == syscall.SIGINT || sig == syscall.SIGTERM {
+				log.Infof("Stop Sql exporter")
+				return
+			}
+		}
+	}
+
 }
 
 // LogFunc is an adapter to allow the use of any function as a promhttp.Logger. If f is a function, LogFunc(f) is a
